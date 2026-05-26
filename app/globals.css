@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens ─────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Warm cream light */
+    --background:          42 28% 96%;
+    --foreground:          24 18% 10%;
+
+    --card:                0 0% 100%;
+    --card-foreground:     24 18% 10%;
+
+    --popover:             0 0% 100%;
+    --popover-foreground:  24 18% 10%;
+
+    /* Amber gold primary */
+    --primary:             34 88% 50%;
+    --primary-foreground:  0 0% 100%;
+
+    --secondary:           38 18% 91%;
+    --secondary-foreground:24 14% 22%;
+
+    --muted:               38 14% 90%;
+    --muted-foreground:    28 10% 44%;
+
+    --accent:              38 14% 87%;
+    --accent-foreground:   24 14% 15%;
+
+    --destructive:         2 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border:              33 16% 83%;
+    --input:               0 0% 100%;
+    --ring:                34 88% 50%;
+
+    --radius:              0.75rem;
+  }
+
+  .dark {
+    /* Deep warm espresso */
+    --background:          23 10% 6%;
+    --foreground:          36 14% 87%;
+
+    --card:                23 8% 9%;
+    --card-foreground:     36 14% 87%;
+
+    --popover:             23 8% 8%;
+    --popover-foreground:  36 14% 87%;
+
+    --primary:             34 88% 60%;
+    --primary-foreground:  23 12% 6%;
+
+    --secondary:           23 6% 13%;
+    --secondary-foreground:36 10% 70%;
+
+    --muted:               23 6% 12%;
+    --muted-foreground:    28 8% 46%;
+
+    --accent:              23 6% 16%;
+    --accent-foreground:   36 10% 82%;
+
+    --destructive:         2 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border:              26 9% 17%;
+    --input:               23 8% 9%;
+    --ring:                34 88% 60%;
+  }
+}
+
+/* ─── Base ──────────────────────────────────────────────── */
+@layer base {
+  * { @apply border-border box-border; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1, "cv02" 1, "cv03" 1;
+  }
+
+  ::-webkit-scrollbar        { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track  { background: transparent; }
+  ::-webkit-scrollbar-thumb  {
+    background: hsl(var(--border));
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+}
+
+/* ─── Utilities ─────────────────────────────────────────── */
+@layer utilities {
+
+  /* ── Subtle warm grid — replaces harsh dot texture ── */
+  .bg-dots {
+    background-image:
+      linear-gradient(hsl(34 20% 40% / 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(34 20% 40% / 0.07) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .dark .bg-dots {
+    background-image:
+      linear-gradient(hsl(34 15% 55% / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(34 15% 55% / 0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* ── Glass card — light ── */
+  .bento-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius);
+    box-shadow:
+      0 2px 16px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .bento-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 8px 28px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  }
+
+  /* ── Glass card — dark (warm amber-tinted) ── */
+  .dark .bento-card {
+    background: rgba(255, 230, 170, 0.028);
+    backdrop-filter: blur(24px) saturate(170%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid rgba(255, 210, 120, 0.09);
+    box-shadow:
+      0 8px 40px rgba(0, 0, 0, 0.44),
+      inset 0 1px 0 rgba(255, 225, 150, 0.05);
+  }
+  .dark .bento-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 16px 48px rgba(0, 0, 0, 0.54),
+      inset 0 1px 0 rgba(255, 225, 150, 0.09);
+  }
+
+  /* ── Section label ── */
+  .section-label {
+    @apply text-[11px] font-medium text-muted-foreground tracking-wide uppercase;
+  }
+
+  /* ── Metric ── */
+  .metric {
+    @apply text-4xl font-bold tabular-nums leading-none tracking-tight;
+  }
+
+  /* ── Fade-in ── */
+  .animate-fade-in {
+    animation: fadeIn 0.25s ease both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Pulse dot ── */
+  .pulse-dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full bg-emerald-500;
+    animation: pulseDot 2s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  /* ── Shimmer skeleton ── */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--accent)) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+  }
+
+  /* ── Divider ── */
+  .divider { @apply w-full h-px bg-border/50; }
+
+  /* ── Page enter animation ── */
+  .page-enter {
+    animation: pageEnter 0.22s ease both;
+  }
+  @keyframes pageEnter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Glass input focus ring ── */
+  .glass-input:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.25);
+  }
+
+  /* ── Stat card gradient variants ── */
+  .stat-amber  { background: linear-gradient(135deg, hsl(34 88% 50% / 0.10) 0%, hsl(34 88% 50% / 0.04) 100%); }
+  .stat-emerald{ background: linear-gradient(135deg, hsl(152 76% 36% / 0.10) 0%, hsl(152 76% 36% / 0.04) 100%); }
+  .stat-sky    { background: linear-gradient(135deg, hsl(199 89% 48% / 0.10) 0%, hsl(199 89% 48% / 0.04) 100%); }
+  .stat-rose   { background: linear-gradient(135deg, hsl(350 80% 55% / 0.10) 0%, hsl(350 80% 55% / 0.04) 100%); }
+  .stat-violet { background: linear-gradient(135deg, hsl(34 88% 50% / 0.10) 0%, hsl(34 88% 50% / 0.04) 100%); }
+}

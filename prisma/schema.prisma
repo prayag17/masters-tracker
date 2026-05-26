@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── User profile (linked to Clerk user by clerkUserId) ──────────────────────
+model UserProfile {
+  id                  String   @id @default(cuid())
+  clerkUserId         String   @unique          // Clerk user ID — primary auth link
+  email               String?                   // cached from Clerk
+
+  // ── Intake goal ────────────────────────────────
+  targetAdmissionYear String
+  targetSemester      String                    // "Fall" | "Spring"
+  targetYear          Int
+  targetDegreeField   String                    // e.g. "MS in Computer Science"
+  targetCountries     String[]
+
+  // ── Academic background ─────────────────────────
+  undergraduateMajor  String
+  undergraduateUniv   String?
+  graduationYear      Int?
+  currentGPA          Float
+  maxGPA              Float    @default(4.0)
+
+  // ── Test scores (structured JSON) ───────────────
+  // { gre: { verbal, quant, aw, taken: bool }, toefl: int, ielts: float }
+  testScores          Json?
+
+  // ── Work experience ─────────────────────────────
+  // [{ company, role, industry, type: "full-time"|"internship"|"part-time", years, current }]
+  workExperience      Json?
+  totalWorkYears      Float    @default(0)
+
+  // ── Research & publications ──────────────────────
+  // [{ title, institution, year, published: bool, journal? }]
+  researchProjects    Json?
+  publications        Json?
+
+  // ── Extracurriculars & impact ────────────────────
+  // [{ org, role, type: "ngo"|"club"|"sports"|"arts"|"other", years, description }]
+  volunteerWork       Json?
+  // [{ name, year, issuer, level: "international"|"national"|"state"|"university" }]
+  awards              Json?
+
+  // ── Languages ───────────────────────────────────
+  // [{ language, proficiency: "native"|"fluent"|"intermediate"|"basic" }]
+  languages           Json?
+
+  // ── Financial planning ───────────────────────────
+  fundingNeeded       Boolean  @default(false)
+  budgetUSD           Float?
+  scholarshipInterest Boolean  @default(false)
+
+  // ── Documents & links ────────────────────────────
+  cvFilePath          String?
+  cvFileName          String?
+  linkedinUrl         String?
+  githubUrl           String?
+  portfolioUrl        String?
+
+  // ── App state ────────────────────────────────────
+  isOnboarded         Boolean  @default(false)
+  onboardingStep      Int      @default(0)      // resume partial onboarding
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  universities        University[]
+  dailyTasks          DailyTask[]
+  sopIterations       SOPIteration[]
+  networkingContacts  NetworkingContact[]
+  expenses            Expense[]
+  pushSubscriptions   PushSubscription[]
+}
+
+// ─── Push notification subscriptions ────────────────────────────────────────
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// ─── Universities ────────────────────────────────────────────────────────────
+model University {
+  id                String   @id @default(cuid())
+  name              String
+  country           String
+  city              String?
+  programName       String
+  department        String?
+  applicationStatus String   @default("researching")
+  // researching | applied | interview | accepted | rejected | waitlisted
+  priority          String   @default("medium") // high | medium | low
+  notes             String?
+  websiteUrl        String?
+
+  // Scraped admission data
+  earlyActionDeadline   DateTime?
+  regularDeadline       DateTime?
+  rollingDeadline       DateTime?
+  applicationFee        Float?
+  avgGREVerbal          Int?
+  avgGREQuantitative    Int?
+  avgGREAW              Float?
+  avgTOEFL              Int?
+  avgIELTS              Float?
+  annualTuition         Float?
+  admissionPageUrl      String?
+  lastScraped           DateTime?
+  scrapingStatus        String   @default("pending") // pending | running | done | failed
+
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  sopIterations SOPIteration[]
+  expenses      Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+// ─── Daily tasks / planner ───────────────────────────────────────────────────
+model DailyTask {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  phase       String    // pre-application | shortlisting | applications | visa-finance
+  dueDate     DateTime
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  urgency     String    @default("medium") // low | medium | high | critical
+  category    String    // test-prep | research | sop | application | networking | financial
+  isGenerated Boolean   @default(false)
+
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+  @@index([dueDate])
+}
+
+// ─── SOP iterations ──────────────────────────────────────────────────────────
+model SOPIteration {
+  id               String   @id @default(cuid())
+  version          Int      @default(1)
+  title            String   @default("Untitled Draft")
+  content          String   @db.Text
+  wordCount        Int      @default(0)
+  targetUniversity String?
+
+  overallScore     Float?
+  evaluationStatus String   @default("pending") // pending | running | done | failed
+  criticFeedback   Json?
+  officerFeedback  Json?
+  validatorOutput  Json?
+  evaluatedAt      DateTime?
+
+  universityId String?
+  university   University? @relation(fields: [universityId], references: [id])
+  profileId    String
+  profile      UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+// ─── Networking contacts ─────────────────────────────────────────────────────
+model NetworkingContact {
+  id           String    @id @default(cuid())
+  name         String
+  title        String
+  university   String
+  department   String?
+  linkedinUrl  String?
+  email        String?
+  type         String    // alumni | professor | student | staff
+  status       String    @default("not-contacted")
+  // not-contacted | contacted | replied | meeting-scheduled | follow-up-needed
+
+  outreachDate DateTime?
+  lastFollowUp DateTime?
+  nextFollowUp DateTime?
+  notes        String?
+  templateUsed String?
+
+  profileId String
+  profile   UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+// ─── Expenses ────────────────────────────────────────────────────────────────
+model Expense {
+  id          String   @id @default(cuid())
+  category    String
+  // application-fee | test-prep | visa | tuition | living | travel | misc
+  description String
+  amount      Float
+  currency    String   @default("USD")
+  date        DateTime
+  isPaid      Boolean  @default(false)
+  notes       String?
+
+  universityId String?
+  university   University? @relation(fields: [universityId], references: [id])
+  profileId    String
+  profile      UserProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([profileId])
+}

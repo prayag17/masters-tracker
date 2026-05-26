@@ -1,0 +1,28 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Rounded square background — primary purple -->
+  <rect width="512" height="512" rx="102" fill="#7c3aed"/>
+
+  <!-- Graduation cap top (mortarboard flat top) -->
+  <path
+    d="M128 200 L256 128 L384 200 L256 272 Z"
+    fill="white"
+    opacity="0.92"
+  />
+
+  <!-- Cap tassel pole -->
+  <line x1="256" y1="272" x2="256" y2="346"
+    stroke="white" stroke-width="26" stroke-linecap="round"/>
+
+  <!-- Cap arc (diploma holder brim) -->
+  <path
+    d="M183 238 L183 302 A73 73 0 0 0 329 302 L329 238"
+    stroke="white" stroke-width="26" stroke-linecap="round"
+    stroke-linejoin="round" fill="none" opacity="0.92"/>
+
+  <!-- Subtle inner glow ring for depth -->
+  <rect width="512" height="512" rx="102"
+    fill="none"
+    stroke="white"
+    stroke-width="6"
+    opacity="0.12"/>
+</svg>
