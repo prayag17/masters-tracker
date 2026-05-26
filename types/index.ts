@@ -102,6 +102,12 @@ export interface DailyTask {
   updatedAt: string
 }
 
+export type TaskPreview = {
+	title: string;
+	dueDate: string | Date;
+	urgency: Urgency;
+};
+
 export interface SOPIteration {
   id: string
   version: number

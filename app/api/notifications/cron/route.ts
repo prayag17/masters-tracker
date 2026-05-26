@@ -12,6 +12,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import webpush from "web-push"
 import { addDays, isToday, differenceInDays, isSunday, startOfWeek, endOfWeek } from "date-fns"
+import type { TaskPreview, Urgency } from "@/types";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -57,12 +58,55 @@ export async function POST(req: Request) {
     let notification: { title: string; body: string; url?: string } | null = null
     const now = new Date()
 
+    // Normalize and validate selected task fields at runtime to avoid unsafe casts
+				const allowedUrgencies: Urgency[] = [
+					"low",
+					"medium",
+					"high",
+					"critical",
+				];
+				const isValidUrgency = (u: unknown): u is Urgency =>
+					typeof u === "string" && allowedUrgencies.includes(u as Urgency);
+
+				const normalizeTasks = (raw: unknown[]): TaskPreview[] => {
+					return raw
+						.map((r) => {
+							const obj = r as {
+								title?: unknown;
+								dueDate?: unknown;
+								urgency?: unknown;
+							};
+							return {
+								title:
+									typeof obj.title === "string"
+										? obj.title
+										: String(obj.title ?? ""),
+								dueDate:
+									obj.dueDate instanceof Date
+										? obj.dueDate
+										: String(obj.dueDate ?? ""),
+								urgency: isValidUrgency(obj.urgency) ? obj.urgency : "medium",
+							} as TaskPreview;
+						})
+						.filter(
+							(t) =>
+								t.title.length > 0 &&
+								(typeof t.dueDate === "string" || t.dueDate instanceof Date),
+						);
+				};
+
+				const tasks = normalizeTasks(profile.dailyTasks);
+
     if (type === "daily") {
       // Tasks due today
-      const todayTasks = profile.dailyTasks.filter((t) => isToday(new Date(t.dueDate)))
+						const todayTasks = tasks.filter((t) =>
+							isToday(new Date(t.dueDate)),
+						);
       if (todayTasks.length === 0) { results.skipped++; continue }
 
-      const urgent = todayTasks.filter((t) => t.urgency === "critical" || t.urgency === "high")
+      const urgent = todayTasks.filter(
+							(t) => t.urgency === "critical" || t.urgency === "high",
+						);
       notification = {
         title: `📋 ${todayTasks.length} task${todayTasks.length > 1 ? "s" : ""} due today`,
         body:  urgent.length > 0
@@ -97,11 +141,11 @@ export async function POST(req: Request) {
     else if (type === "weekly" && isSunday(now)) {
       const weekStart = startOfWeek(now)
       const weekEnd   = endOfWeek(now)
-      const completedThisWeek = profile.dailyTasks.filter((t) => {
-        // We'd need completedAt — using dueDate as proxy for weekly count
-        const d = new Date(t.dueDate)
-        return d >= weekStart && d <= weekEnd
-      }).length
+      const completedThisWeek = tasks.filter((t) => {
+							// We'd need completedAt — using dueDate as proxy for weekly count
+							const d = new Date(t.dueDate);
+							return d >= weekStart && d <= weekEnd;
+						}).length;
 
       const allUnis = await prisma.university.findMany({
         where:  { profileId: profile.id },
