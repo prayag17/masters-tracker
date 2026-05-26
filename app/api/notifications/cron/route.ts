@@ -151,7 +151,10 @@ export async function POST(req: Request) {
         where:  { profileId: profile.id },
         select: { applicationStatus: true },
       })
-      const applied = allUnis.filter((u) => u.applicationStatus === "applied").length
+      const applied = allUnis.filter(
+							(u: { applicationStatus: string }) =>
+								u.applicationStatus === "applied",
+						).length;
 
       notification = {
         title: "📊 Weekly progress recap",
