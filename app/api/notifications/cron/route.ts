@@ -11,14 +11,21 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import webpush from "web-push"
-import { addDays, isToday, differenceInDays, isSunday, startOfWeek, endOfWeek } from "date-fns"
+import {
+	isToday,
+	differenceInDays,
+	isSunday,
+	startOfWeek,
+	endOfWeek,
+} from "date-fns";
+import { getRequiredEnv } from "@/lib/env";
 import type { TaskPreview, Urgency } from "@/types";
 
 webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
+	getRequiredEnv("VAPID_SUBJECT"),
+	getRequiredEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY"),
+	getRequiredEnv("VAPID_PRIVATE_KEY"),
+);
 
 export async function POST(req: Request) {
   // Verify cron secret
@@ -120,9 +127,14 @@ export async function POST(req: Request) {
       // Deadline alerts: 7d, 3d, 1d away
       const alerts: { uni: string; days: number }[] = []
       for (const uni of profile.universities) {
-        const deadlines = [uni.regularDeadline, uni.earlyActionDeadline].filter(Boolean)
+        const deadlines = [
+									uni.regularDeadline,
+									uni.earlyActionDeadline,
+								].filter(
+									(deadline): deadline is Date => deadline instanceof Date,
+								);
         for (const dl of deadlines) {
-          const days = differenceInDays(new Date(dl!), now)
+          const days = differenceInDays(dl, now);
           if (days === 7 || days === 3 || days === 1) {
             alerts.push({ uni: uni.name, days })
           }

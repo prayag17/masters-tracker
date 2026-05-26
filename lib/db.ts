@@ -1,8 +1,11 @@
 import { PrismaClient } from "@prisma/client"
 import { PrismaNeon } from "@prisma/adapter-neon"
+import { getRequiredEnv } from "@/lib/env";
 
 function createPrismaClient() {
-  const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL! })
+  const adapter = new PrismaNeon({
+			connectionString: getRequiredEnv("DATABASE_URL"),
+		});
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
